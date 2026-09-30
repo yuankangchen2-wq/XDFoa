@@ -1,0 +1,19 @@
+server:
+  name: erp-production-service
+  http_port: 8085
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: oa_production
+  sslmode: disable
+
+inventory_service:
+  base_url: http://localhost:8083
+
+kafka:
+  brokers:
+    - localhost:9092

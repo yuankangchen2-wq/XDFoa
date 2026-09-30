@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package purchase;
+option go_package = "./api/purchase";
+
+// 采购订单
+message PurchaseOrder {
+  int64 id = 1;
+  string tenant_id = 2;
+  string order_no = 3;
+  string supplier_code = 4;
+  int64 warehouse_id = 5;
+  int32 status = 6;          // 1=草稿 2=已审批 3=部分到货 4=全部到货 5=已结算 9=已取消
+  double total_amount = 7;
+  string remark = 8;
+  int64 created_at = 9;
+  repeated PurchaseOrderItem items = 10;
+}
+
+message PurchaseOrderItem {
+  int64 id = 1;
+  int64 order_id = 2;
+  string sku_code = 3;
+  int64 quantity = 4;
+  double unit_price = 5;
+  int64 received_qty = 6;
+}
+
+// 到货单
+message PurchaseReceipt {
+  int64 id = 1;
+  string tenant_id = 2;
+  string receipt_no = 3;
+  int64 order_id = 4;
+  int32 status = 5;          // 1=待入库 2=已入库
+  int64 created_at = 6;
+  repeated PurchaseReceiptItem items = 7;
+}
+
+message PurchaseReceiptItem {
+  int64 id = 1;
+  int64 receipt_id = 2;
+  string sku_code = 3;
+  int64 quantity = 4;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message ListOrdersRequest {
+  string tenant_id = 1;
+  int32 status = 2;
+  PageRequest page = 3;
+}
+
+message ListOrdersResponse {
+  repeated PurchaseOrder orders = 1;
+  PageResponse page = 2;
+}
+
+message Empty {}
+
+service PurchaseService {
+  rpc CreateOrder(PurchaseOrder) returns (PurchaseOrder);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc ApproveOrder(PurchaseOrder) returns (Empty);
+  rpc ReceiveGoods(PurchaseReceipt) returns (PurchaseReceipt);
+}

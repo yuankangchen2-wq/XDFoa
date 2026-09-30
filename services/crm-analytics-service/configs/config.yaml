@@ -1,0 +1,16 @@
+server:
+  name: crm-analytics-service
+  http_port: 8093
+
+database:
+  driver: mysql
+  host: localhost
+  port: 3306
+  user: root
+  password: root
+  dbname: oa_crm
+  charset: utf8mb4
+
+kafka:
+  brokers:
+    - localhost:9092

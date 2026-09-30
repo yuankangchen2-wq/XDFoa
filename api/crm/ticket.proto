@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package crm;
+option go_package = "./api/crm";
+
+// 工单
+message ServiceTicket {
+  int64 id = 1;
+  string tenant_id = 2;
+  string ticket_no = 3;
+  int64 customer_id = 4;
+  string title = 5;
+  string description = 6;
+  int32 status = 7;           // 1=待处理 2=处理中 3=已解决 4=已关闭
+  int32 priority = 8;         // 1=低 2=中 3=高 4=紧急
+  string assignee_id = 9;
+  int32 satisfaction = 10;    // 满意度 1-5
+  int64 created_at = 11;
+  repeated TicketReply replies = 12;
+}
+
+// 工单回复
+message TicketReply {
+  int64 id = 1;
+  int64 ticket_id = 2;
+  string user_id = 3;
+  string content = 4;
+  int64 created_at = 5;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service CrmTicketService {
+  rpc CreateTicket(ServiceTicket) returns (ServiceTicket);
+  rpc ListTickets(Empty) returns (ServiceTicket);
+  rpc GetTicket(ServiceTicket) returns (ServiceTicket);
+  rpc UpdateStatus(ServiceTicket) returns (Empty);
+  rpc AssignTicket(ServiceTicket) returns (Empty);
+  rpc AddReply(TicketReply) returns (TicketReply);
+  rpc RateTicket(ServiceTicket) returns (Empty);
+}

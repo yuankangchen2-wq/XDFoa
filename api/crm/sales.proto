@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package crm;
+option go_package = "./api/crm";
+
+// 销售订单
+message SalesOrder {
+  int64 id = 1;
+  string tenant_id = 2;
+  string order_no = 3;
+  int64 customer_id = 4;
+  int32 status = 5;           // 1=待审批 2=已审批 3=已发货 4=已完成 9=已取消
+  double total_amount = 6;
+  string remark = 7;
+  int64 created_at = 8;
+}
+
+// 合同
+message Contract {
+  int64 id = 1;
+  string tenant_id = 2;
+  string contract_no = 3;
+  int64 customer_id = 4;
+  string name = 5;
+  double amount = 6;
+  double paid_amount = 7;
+  int32 status = 8;           // 1=草稿 2=审批中 3=生效 4=归档
+  string sign_date = 9;
+  string remark = 10;
+  int64 created_at = 11;
+}
+
+// 回款
+message Payment {
+  int64 id = 1;
+  string tenant_id = 2;
+  int64 contract_id = 3;
+  double amount = 4;
+  string pay_date = 5;
+  string pay_method = 6;
+  string remark = 7;
+  int64 created_at = 8;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service CrmSalesService {
+  rpc CreateSalesOrder(SalesOrder) returns (SalesOrder);
+  rpc ListSalesOrders(Empty) returns (SalesOrder);
+  rpc ApproveSalesOrder(SalesOrder) returns (Empty);
+  rpc CreateContract(Contract) returns (Contract);
+  rpc ListContracts(Empty) returns (Contract);
+  rpc ApproveContract(Contract) returns (Empty);
+  rpc ArchiveContract(Contract) returns (Empty);
+  rpc AddPayment(Payment) returns (Payment);
+  rpc ListPayments(Contract) returns (Payment);
+}

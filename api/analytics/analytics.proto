@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package analytics;
+option go_package = "./api/analytics";
+
+// 销售快照
+message SalesSnapshot {
+  int64 id = 1;
+  string tenant_id = 2;
+  string period = 3;       // 期间 yyyy-MM
+  int64 product_id = 4;
+  int64 customer_id = 5;
+  double total_amount = 6; // 销售额
+  int32 order_count = 7;   // 订单数
+  double avg_amount = 8;   // 客单价
+  int64 created_at = 9;
+}
+
+// 漏斗阶段
+message FunnelStage {
+  int64 id = 1;
+  string tenant_id = 2;
+  string period = 3;
+  string stage = 4;        // 阶段名称
+  int32 opportunity_count = 5;
+  double amount = 6;       // 该阶段商机金额
+  double conversion_rate = 7; // 转化率
+  int64 created_at = 8;
+}
+
+// 客户统计
+message CustomerStat {
+  int64 id = 1;
+  string tenant_id = 2;
+  string period = 3;
+  int32 new_customers = 4;
+  int32 active_customers = 5;
+  double total_contribution = 6; // 总贡献金额
+  int64 top_customer_id = 7;
+  double top_contribution = 8;
+  int64 created_at = 9;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+
+message DashboardResponse {
+  double total_sales = 1;
+  int32 total_orders = 2;
+  int32 new_customers = 3;
+  int32 open_tickets = 4;
+  double conversion_rate = 5;
+  double avg_ticket = 6;
+}
+
+message Empty {}
+
+service AnalyticsService {
+  rpc RecordSalesSnapshot(SalesSnapshot) returns (SalesSnapshot);
+  rpc GetDashboard(Empty) returns (DashboardResponse);
+}

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package audit;
+option go_package = "./api/audit";
+
+message AuditLog {
+  int64 id = 1;
+  string tenant_id = 2;
+  string user_id = 3;
+  string username = 4;
+  string action = 5;          // 操作类型: CREATE/UPDATE/DELETE/LOGIN/LOGOUT/EXPORT...
+  string module = 6;          // 模块: user/customer/order/inventory...
+  string target_id = 7;       // 操作对象ID
+  string target_name = 8;     // 操作对象名称
+  string request_params = 9;  // 请求参数 JSON
+  string result = 10;         // 响应结果
+  string ip = 11;
+  int32 status = 12;          // 1=成功 2=失败
+  int64 duration_ms = 13;     // 耗时
+  int64 created_at = 14;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service AuditService {
+  rpc RecordAudit(AuditLog) returns (AuditLog);
+  rpc QueryAudit(PageRequest) returns (PageResponse);
+}

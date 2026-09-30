@@ -1,0 +1,22 @@
+server:
+  name: mdm-service
+  http_port: 8081
+  grpc_port: 9091
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: oa_mdm
+  sslmode: disable
+
+kafka:
+  brokers:
+    - localhost:9092
+  event_topic: mdm-events
+
+etcd:
+  endpoints:
+    - localhost:2379

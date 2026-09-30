@@ -1,0 +1,10 @@
+server:
+  name: portal-bff
+  http_port: 8095
+
+services:
+  iam: http://localhost:8082
+  mdm: http://localhost:8081
+  erp: http://localhost:8083
+  crm: http://localhost:8087
+  order: http://localhost:8086

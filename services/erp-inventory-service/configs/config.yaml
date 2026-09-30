@@ -1,0 +1,22 @@
+server:
+  name: erp-inventory-service
+  http_port: 8083
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: oa_inventory
+  sslmode: disable
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+
+kafka:
+  brokers:
+    - localhost:9092
+  event_topic: inventory-events

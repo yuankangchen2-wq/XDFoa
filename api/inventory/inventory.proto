@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package inventory;
+option go_package = "./api/inventory";
+
+// ---------- 仓库 ----------
+message Warehouse {
+  int64 id = 1;
+  string tenant_id = 2;
+  string warehouse_code = 3;
+  string warehouse_name = 4;
+  string address = 5;
+  int32 status = 6;
+  int64 created_at = 7;
+}
+
+// ---------- 库存账户（sku + warehouse 余额） ----------
+message StockAccount {
+  int64 id = 1;
+  string tenant_id = 2;
+  string sku_code = 3;
+  int64 warehouse_id = 4;
+  int64 quantity = 5;        // 可用库存
+  int64 allocated = 6;       // 已预扣（锁定）
+  int64 safety_stock = 7;    // 安全库存
+  string batch_no = 8;       // 批次号
+  int64 expire_at = 9;       // 效期
+  int64 updated_at = 10;
+}
+
+// ---------- 库存流水（不可变） ----------
+message StockJournal {
+  int64 id = 1;
+  string tenant_id = 2;
+  string sku_code = 3;
+  int64 warehouse_id = 4;
+  string change_type = 5;    // in/out/allocate/release/transfer/adjust
+  int64 quantity = 6;        // 变动数量（正负）
+  int64 before_qty = 7;      // 变动前
+  int64 after_qty = 8;       // 变动后
+  string reference_id = 9;    // 关联单据（订单号/采购单号等）
+  string batch_no = 10;
+  int64 created_at = 11;
+}
+
+// ---------- 调拨单 ----------
+message StockTransfer {
+  int64 id = 1;
+  string tenant_id = 2;
+  string transfer_no = 3;
+  int64 from_warehouse_id = 4;
+  int64 to_warehouse_id = 5;
+  string sku_code = 6;
+  int64 quantity = 7;
+  int32 status = 8;          // 1=待出库 2=已出库 3=已入库 4=已取消
+  int64 created_at = 9;
+}
+
+// ---------- 盘点单 ----------
+message Stocktake {
+  int64 id = 1;
+  string tenant_id = 2;
+  string stocktake_no = 3;
+  int64 warehouse_id = 4;
+  int32 status = 5;          // 1=进行中 2=已完成
+  int64 created_at = 6;
+}
+
+message StocktakeItem {
+  int64 id = 1;
+  int64 stocktake_id = 2;
+  string sku_code = 3;
+  int64 system_qty = 4;      // 系统数量
+  int64 actual_qty = 5;      // 实盘数量
+  int64 diff_qty = 6;        // 差异
+}
+
+// ---------- 请求/响应 ----------
+message AllocateStockRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+  int64 quantity = 4;
+  string reference_id = 5;
+}
+
+message ReleaseStockRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+  int64 quantity = 4;
+  string reference_id = 5;
+}
+
+message DeductStockRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+  int64 quantity = 4;
+  string reference_id = 5;
+}
+
+message StockInRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+  int64 quantity = 4;
+  string reference_id = 5;
+  string batch_no = 6;
+  int64 expire_at = 7;
+}
+
+message GetStockRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+}
+
+message ListStocksRequest {
+  string tenant_id = 1;
+  string sku_code = 2;
+  int64 warehouse_id = 3;
+  PageRequest page = 4;
+}
+
+message ListStocksResponse {
+  repeated StockAccount stocks = 1;
+  PageResponse page = 2;
+}
+
+message PageRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message PageResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message Empty {}
+
+service InventoryService {
+  rpc AllocateStock(AllocateStockRequest) returns (Empty);
+  rpc ReleaseStock(ReleaseStockRequest) returns (Empty);
+  rpc DeductStock(DeductStockRequest) returns (Empty);
+  rpc StockIn(StockInRequest) returns (Empty);
+  rpc GetStock(GetStockRequest) returns (StockAccount);
+  rpc ListStocks(ListStocksRequest) returns (ListStocksResponse);
+}

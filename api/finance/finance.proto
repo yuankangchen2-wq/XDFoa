@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package finance;
+option go_package = "./api/finance";
+
+// 应收账款
+message Receivable {
+  int64 id = 1;
+  string tenant_id = 2;
+  int64 customer_id = 3;
+  double amount = 4;
+  double received_amount = 5;
+  int32 status = 6;          // 1=未收 2=部分已收 3=已收清
+  string due_date = 7;
+  string remark = 8;
+  int64 created_at = 9;
+}
+
+// 应付账款
+message Payable {
+  int64 id = 1;
+  string tenant_id = 2;
+  int64 supplier_id = 3;
+  double amount = 4;
+  double paid_amount = 5;
+  int32 status = 6;          // 1=未付 2=部分已付 3=已付清
+  string due_date = 7;
+  string remark = 8;
+  int64 created_at = 9;
+}
+
+// 收付款记录
+message FinancePayment {
+  int64 id = 1;
+  string tenant_id = 2;
+  int32 type = 3;            // 1=收款 2=付款
+  int64 ref_id = 4;          // 关联应收/应付ID
+  double amount = 5;
+  string pay_date = 6;
+  string pay_method = 7;
+  string remark = 8;
+  int64 created_at = 9;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service FinanceService {
+  rpc CreateReceivable(Receivable) returns (Receivable);
+  rpc CreatePayable(Payable) returns (Payable);
+  rpc ReceivePayment(FinancePayment) returns (FinancePayment);
+  rpc MakePayment(FinancePayment) returns (FinancePayment);
+}

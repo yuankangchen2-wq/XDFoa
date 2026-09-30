@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package cost;
+option go_package = "./api/cost";
+
+// 成本中心
+message CostCenter {
+  int64 id = 1;
+  string tenant_id = 2;
+  string code = 3;
+  string name = 4;
+  int32 type = 5;   // 1=部门 2=车间 3=其他
+  string remark = 6;
+  int64 created_at = 7;
+}
+
+// 产品成本
+message ProductCost {
+  int64 id = 1;
+  string tenant_id = 2;
+  int64 product_id = 3;
+  double material_cost = 4;    // 物料成本
+  double labor_cost = 5;       // 人工成本
+  double overhead_cost = 6;    // 制造费用
+  double total_cost = 7;       // 总成本
+  double quantity = 8;         // 数量
+  double unit_cost = 9;        // 单位成本
+  string period = 10;          // 成本期间
+  int64 created_at = 11;
+}
+
+// 成本记录（按工单/产品归集）
+message CostRecord {
+  int64 id = 1;
+  string tenant_id = 2;
+  int64 product_id = 3;
+  int64 work_order_id = 4;
+  int64 cost_center_id = 5;
+  int32 element = 6;   // 1=物料 2=人工 3=制造费用
+  double amount = 7;
+  string period = 8;
+  int32 status = 9;    // 1=待归集 2=已归集
+  string remark = 10;
+  int64 created_at = 11;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service CostService {
+  rpc CreateCostCenter(CostCenter) returns (CostCenter);
+  rpc CalculateProductCost(ProductCost) returns (ProductCost);
+  rpc CollectCost(CostRecord) returns (CostRecord);
+}

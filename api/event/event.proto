@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package event;
+option go_package = "./api/event";
+
+// 事件统一 Header
+message EventHeader {
+  string event_id = 1;
+  string event_type = 2;
+  string event_version = 3;
+  string source = 4;
+  string tenant_id = 5;
+  int64 occurred_at = 6;
+  string trace_id = 7;
+}
+
+// MDM 实体同步事件（客户/商品/供应商/组织变更统一用此事件）
+message EntitySynced {
+  EventHeader header = 1;
+  string entity_type = 2;  // customer / product / supplier / organization
+  string action = 3;       // created / updated / deleted
+  string entity_id = 4;
+  string tenant_id = 5;
+  bytes payload = 6;       // 实体 JSON
+}

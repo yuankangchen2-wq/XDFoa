@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package production;
+option go_package = "./api/production";
+
+// BOM 物料清单
+message Bom {
+  int64 id = 1;
+  string tenant_id = 2;
+  string product_sku = 3;
+  string bom_name = 4;
+  int32 status = 5;
+  int64 created_at = 6;
+  repeated BomItem items = 7;
+}
+
+message BomItem {
+  int64 id = 1;
+  int64 bom_id = 2;
+  string component_sku = 3;
+  int64 quantity = 4;
+  int32 level = 5;
+}
+
+// 生产工单
+message WorkOrder {
+  int64 id = 1;
+  string tenant_id = 2;
+  string order_no = 3;
+  string product_sku = 4;
+  int64 quantity = 5;
+  int64 warehouse_id = 6;
+  int32 status = 7;
+  int64 produced_qty = 8;
+  int64 created_at = 9;
+}
+
+// 领料单
+message MaterialIssue {
+  int64 id = 1;
+  string tenant_id = 2;
+  string issue_no = 3;
+  int64 work_order_id = 4;
+  int32 status = 5;
+  int64 created_at = 6;
+  repeated MaterialIssueItem items = 7;
+}
+
+message MaterialIssueItem {
+  int64 id = 1;
+  int64 issue_id = 2;
+  string sku_code = 3;
+  int64 quantity = 4;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message Empty {}
+
+service ProductionService {
+  rpc CreateBom(Bom) returns (Bom);
+  rpc CreateWorkOrder(WorkOrder) returns (WorkOrder);
+  rpc IssueMaterial(MaterialIssue) returns (MaterialIssue);
+}

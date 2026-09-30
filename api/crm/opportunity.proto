@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package crm;
+option go_package = "./api/crm";
+
+// 商机
+message Opportunity {
+  int64 id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  int64 customer_id = 4;
+  int32 stage = 5;           // 1=线索 2=意向 3=报价 4=谈判 5=成交 6=输单
+  double amount = 6;
+  int32 win_rate = 7;        // 赢率 0-100
+  string expected_close_date = 8;
+  string owner_id = 9;
+  string remark = 10;
+  int64 created_at = 11;
+}
+
+message PageRequest { int32 page = 1; int32 page_size = 2; }
+message PageResponse { int64 total = 1; int32 page = 2; int32 page_size = 3; }
+
+message ListOpportunityRequest {
+  string tenant_id = 1;
+  int32 stage = 2;
+  string owner_id = 3;
+  PageRequest page = 4;
+}
+
+message ListOpportunityResponse {
+  repeated Opportunity opportunities = 1;
+  PageResponse page = 2;
+}
+
+message StageTransitionRequest {
+  int64 id = 1;
+  int32 to_stage = 2;
+  string remark = 3;
+}
+
+message ConvertToOrderRequest {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 warehouse_id = 3;
+}
+
+message Empty {}
+
+service CrmOpportunityService {
+  rpc CreateOpportunity(Opportunity) returns (Opportunity);
+  rpc ListOpportunities(ListOpportunityRequest) returns (ListOpportunityResponse);
+  rpc GetOpportunity(Opportunity) returns (Opportunity);
+  rpc UpdateOpportunity(Opportunity) returns (Empty);
+  rpc DeleteOpportunity(Opportunity) returns (Empty);
+  rpc TransitionStage(StageTransitionRequest) returns (Empty);
+  rpc ConvertToOrder(ConvertToOrderRequest) returns (Empty);
+}
