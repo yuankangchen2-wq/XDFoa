@@ -4,16 +4,20 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
+import PortalHome from './views/PortalHome.vue'
+
+const Empty = { template: '<div></div>' }
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/portal' },
-    { path: '/portal/:pathMatch(.*)*', component: { template: '<div></div>' } },
-    { path: '/iam/:pathMatch(.*)*', component: { template: '<div></div>' } },
-    { path: '/mdm/:pathMatch(.*)*', component: { template: '<div></div>' } },
-    { path: '/erp/:pathMatch(.*)*', component: { template: '<div></div>' } },
-    { path: '/crm/:pathMatch(.*)*', component: { template: '<div></div>' } }
+    { path: '/', component: PortalHome },
+    { path: '/portal/:pathMatch(.*)*', component: Empty },
+    { path: '/iam/:pathMatch(.*)*', component: Empty },
+    { path: '/mdm/:pathMatch(.*)*', component: Empty },
+    { path: '/erp/:pathMatch(.*)*', component: Empty },
+    { path: '/crm/:pathMatch(.*)*', component: Empty },
+    { path: '/:pathMatch(.*)*', redirect: '/' }
   ]
 })
 

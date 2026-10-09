@@ -7,13 +7,19 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig            `mapstructure:"server"`
-	Services map[string]string       `mapstructure:"services"`
+	Server   ServerConfig `mapstructure:"server"`
+	Database DBConfig     `mapstructure:"database"`
+	Services map[string]string `mapstructure:"services"`
 }
 
 type ServerConfig struct {
 	Name     string `mapstructure:"name"`
 	HTTPPort int    `mapstructure:"http_port"`
+}
+
+type DBConfig struct {
+	PortalDSN string `mapstructure:"portal_dsn"`
+	IamDSN    string `mapstructure:"iam_dsn"`
 }
 
 func Load(path string) (*Config, error) {

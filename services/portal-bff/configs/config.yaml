@@ -2,6 +2,10 @@ server:
   name: portal-bff
   http_port: 8095
 
+database:
+  portal_dsn: "host=localhost user=postgres password=postgres dbname=oa_portal port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+  iam_dsn: "host=localhost user=postgres password=postgres dbname=oa_iam port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+
 services:
   iam: http://localhost:8082
   mdm: http://localhost:8081
