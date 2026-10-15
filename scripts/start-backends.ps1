@@ -6,6 +6,7 @@ $svcs = @(
   "erp-production-service","order-service","crm-customer-service",
   "crm-opportunity-service","crm-sales-service","crm-service-ticket-service",
   "erp-finance-service","erp-cost-service","crm-analytics-service",
+  "crm-scrm-service",
   "audit-service","portal-bff"
 )
 foreach ($s in $svcs) {

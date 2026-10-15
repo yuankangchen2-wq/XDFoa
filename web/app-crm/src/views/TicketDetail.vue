@@ -31,7 +31,7 @@
         <el-button v-if="ticket.status === 1 || ticket.status === 2" type="success" @click="updateStatus(3)">标记解决</el-button>
         <el-button v-if="ticket.status === 3" type="info" @click="updateStatus(4)">关闭工单</el-button>
         <el-select v-model="rateScore" placeholder="满意度评分" style="width:140px">
-          <el-option v-for="n in 5" :key="n" :label="`${n} 星`" :value="n" />
+          <el-option v-for="n in 5" :key="n" :label="n + ' 星'" :value="n" />
         </el-select>
         <el-button v-if="ticket.status === 3" type="warning" @click="rate">提交评价</el-button>
       </div>

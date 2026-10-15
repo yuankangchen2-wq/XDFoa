@@ -20,6 +20,7 @@ function render(props?: any) {
 renderWithQiankun({
   mount(props) { render(props) },
   bootstrap() {},
+  update() {},
   unmount() { app?.unmount(); app = null }
 })
 

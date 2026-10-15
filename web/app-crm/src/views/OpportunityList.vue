@@ -44,7 +44,7 @@
         <el-table-column prop="owner_id" label="归属销售" width="100" />
         <el-table-column label="操作" width="220">
           <template #default="{ row }">
-            <el-dropdown @command="(cmd) => transition(row, cmd)" trigger="click">
+            <el-dropdown @command="(cmd: number) => transition(row, cmd)" trigger="click">
               <el-button size="small" type="primary">阶段流转<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
               <template #dropdown>
                 <el-dropdown-menu>

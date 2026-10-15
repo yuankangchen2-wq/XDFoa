@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5178,
     proxy: {
+      '/api/scrm': { target: 'http://localhost:8096', changeOrigin: true },
       '/api/crm': { target: 'http://localhost:8087', changeOrigin: true },
       '/api/opp': { target: 'http://localhost:8088', changeOrigin: true },
       '/api/sales': { target: 'http://localhost:8089', changeOrigin: true },

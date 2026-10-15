@@ -24,6 +24,7 @@ Thumbs.db
 node_modules/
 dist/
 *.log
+*.tsbuildinfo
 
 # Database credential files
 .mysql-opts.cnf
