@@ -9,7 +9,7 @@ const (
 	StatusFollowing     = "跟进中"
 	StatusPendingHandover = "待交接"
 	StatusHandedOver    = "已交接"
-	StatusConverted     = "已转化"
+	StatusConverted     = "已转商"
 	StatusInvalidArchive = "无效归档"
 	StatusStoredArchive = "入库归档"
 	StatusRecycled      = "已回收"

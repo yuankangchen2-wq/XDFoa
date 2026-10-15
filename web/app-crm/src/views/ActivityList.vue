@@ -115,9 +115,9 @@
         <el-table-column label="入库归档" width="80" align="right">
           <template #default="{ row }">{{ row.stats?.['status:入库归档'] || 0 }}</template>
         </el-table-column>
-        <el-table-column label="已转化" width="70" align="right">
+        <el-table-column label="已转商" width="70" align="right">
           <template #default="{ row }">
-            <span style="color:#f56c6c;font-weight:600">{{ row.stats?.['status:已转化'] || 0 }}</span>
+            <span style="color:#f56c6c;font-weight:600">{{ row.stats?.['status:已转商'] || 0 }}</span>
           </template>
         </el-table-column>
         <el-table-column label="活动状态" width="90">
@@ -278,11 +278,11 @@ function drillLeads(row: Activity, status?: string) {
 
 function exportCsv() {
   downloadCsv('活动列表.csv',
-    ['活动名称', '来源系统', '类别', '类型', '线索总数', '纯新', '激活', '待交接', '待跟进', '跟进中', '已转化', '状态', '创建人', '活动Id', '活动编码'],
+    ['活动名称', '来源系统', '类别', '类型', '线索总数', '纯新', '激活', '待交接', '待跟进', '跟进中', '已转商', '状态', '创建人', '活动Id', '活动编码'],
     rows.value.map((r: any) => [r.name, r.source_system, r.category, r.type, r.stats?.total || 0,
       r.stats?.['enter:纯新线索'] || 0, r.stats?.['enter:激活线索'] || 0,
       r.stats?.['status:待交接'] || 0, r.stats?.['status:待跟进'] || 0, r.stats?.['status:跟进中'] || 0,
-      r.stats?.['status:已转化'] || 0, ['未开始', '进行中', '已结束'][r.status], r.creator, r.external_id, r.code]))
+      r.stats?.['status:已转商'] || 0, ['未开始', '进行中', '已结束'][r.status], r.creator, r.external_id, r.code]))
   ElMessage.success(`已导出当前页 ${rows.value.length} 条活动`)
 }
 

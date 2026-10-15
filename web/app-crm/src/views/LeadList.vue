@@ -380,7 +380,7 @@ function reset() {
 function statusType(s: string) {
   const m: Record<string, string> = {
     '待分配': 'info', '待跟进': 'warning', '跟进中': '', '待交接': 'danger',
-    '已交接': 'success', '已转化': 'success', '无效归档': 'info', '入库归档': 'info', '已回收': 'info'
+    '已交接': 'success', '已转商': 'success', '无效归档': 'info', '入库归档': 'info', '已回收': 'info'
   }
   return m[s] || ''
 }

@@ -42,6 +42,11 @@ func main() {
 		log.Printf("seed defaults skipped: %v", err)
 	}
 
+	// 兼容旧数据：线索状态「已转化」更名为「已转商」（幂等）
+	if err := db.Model(&model.Lead{}).Where("status = ?", "已转化").Update("status", model.StatusConverted).Error; err != nil {
+		log.Printf("migrate lead status: %v", err)
+	}
+
 	svc := service.NewScrmService(
 		db,
 		repo.NewActivityRepo(db),
