@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,17 @@ func (h *Handler) Register(r *gin.Engine) {
 		api.GET("/me", h.Me)
 		api.GET("/dict", h.Dict)
 		api.GET("/employees", h.Employees)
+		api.GET("/search", h.GlobalSearch)
+
+		api.GET("/leads/:id", h.GetLead)
+		api.GET("/leads/:id/follow-logs", h.LeadFollowLogs)
+		api.POST("/calls/dial", h.CallDial)
+		api.POST("/calls/complete", h.CallComplete)
+		api.GET("/calls", h.RecentCalls)
+
+		api.GET("/notifications", h.ListNotifications)
+		api.GET("/notifications/unread-count", h.UnreadNotifications)
+		api.POST("/notifications/read", h.MarkNotificationsRead)
 
 		api.GET("/home/todos", h.Todos)
 		api.GET("/home/ranking", h.Ranking)
@@ -63,13 +75,20 @@ func (h *Handler) Register(r *gin.Engine) {
 		api.GET("/data-records", h.ListDataRecords)
 		api.POST("/data-records/handover", h.HandoverDataRecords)
 		api.POST("/data-records/adjust", h.AdjustDataRecords)
+
+		h.RegisterP2(api)
 	}
 }
 
 // ---------------- 基础 ----------------
 
 func (h *Handler) Me(c *gin.Context) {
-	c.JSON(200, h.svc.Me())
+	me, err := h.svc.Me(c.Request.Context())
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, me)
 }
 
 func (h *Handler) Dict(c *gin.Context) {
@@ -256,6 +275,9 @@ func parseLeadFilter(c *gin.Context) repo.LeadFilter {
 		FollowStart:  parseDay(q("follow_start")), FollowEnd:   parseDayEnd(q("follow_end")),
 		ArchiveStart: parseDay(q("archive_start")), ArchiveEnd: parseDayEnd(q("archive_end")),
 		TaskCreatedStart: parseDay(q("task_created_start")), TaskCreatedEnd: parseDayEnd(q("task_created_end")),
+	}
+	if s := q("statuses"); s != "" {
+		f.Statuses = strings.Split(s, ",")
 	}
 	// 待办卡片下钻快捷参数
 	switch q("revisit") {

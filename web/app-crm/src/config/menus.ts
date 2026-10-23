@@ -29,8 +29,26 @@ export const menus: TopMenu[] = [
       { title: '数据记录', path: '/data-record' }
     ]
   },
-  { key: 'lead-mgr', title: '线索管理', icon: 'List', path: '/all-leads' },
-  { key: 'opp-mgr', title: '商机管理', icon: 'TrendCharts', path: '/opportunities' },
+  {
+    key: 'lead-mgr', title: '线索管理', icon: 'List',
+    children: [
+      { title: '员工工作台(线索)', path: '/lead-workbench', query: { mode: 'employee' } },
+      { title: '主管工作台(线索)', path: '/lead-workbench', query: { mode: 'supervisor' } }
+    ]
+  },
+  {
+    key: 'opp-mgr', title: '商机管理', icon: 'TrendCharts',
+    children: [
+      { title: '员工工作台(商机)', path: '/opp-workbench', query: { mode: 'employee' } },
+      { title: '主管工作台(商机)', path: '/opp-workbench', query: { mode: 'supervisor' } },
+      { title: '商机盘点', path: '/opp-inventory' },
+      { title: '业绩申诉', path: '/appeals' },
+      { title: '审核中心', path: '/approvals' },
+      { title: '商机备单', path: '/opp-standby' },
+      { title: '成单日志', path: '/deal-logs' },
+      { title: '退调转/订单', path: '/ticket-orders' }
+    ]
+  },
   { key: 'wechat', title: '微信管理', icon: 'ChatDotRound' },
   { key: 'visit', title: '到店管理', icon: 'Shop' },
   { key: 'student', title: '学员服务', icon: 'User' },

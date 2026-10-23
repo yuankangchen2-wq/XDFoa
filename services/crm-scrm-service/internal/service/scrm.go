@@ -33,15 +33,33 @@ type ScrmService struct {
 	perfRepo *repo.PerfRepo
 	todoRepo *repo.TodoSeedRepo
 	handRepo *repo.HandoverRepo
+	logRepo  *repo.FollowLogRepo
+	notifyRepo *repo.NotificationRepo
+	oppRepo *repo.OppRepo
+	assignRepo *repo.AssignRecordRepo
+	task2Repo *repo.EmployeeTaskRepo
+	appealRepo *repo.AppealRepo
+	approvalRepo *repo.DealApprovalRepo
+	dealRepo *repo.DealRepo
+	ticketRepo *repo.TicketRepo
+	orderRepo *repo.OrderRepo
+	gridRepo *repo.GridConfigRepo
 }
 
 func NewScrmService(db *gorm.DB,
 	act *repo.ActivityRepo, lead *repo.LeadRepo, task *repo.ImportTaskRepo,
 	rec *repo.DataRecordRepo, exc *repo.ExceptionRepo, sched *repo.ScheduleRepo,
 	perf *repo.PerfRepo, todo *repo.TodoSeedRepo, hand *repo.HandoverRepo,
+	fl *repo.FollowLogRepo, notify *repo.NotificationRepo,
+	opp *repo.OppRepo, assign *repo.AssignRecordRepo, task2 *repo.EmployeeTaskRepo,
+	appeal *repo.AppealRepo, approval *repo.DealApprovalRepo, deal *repo.DealRepo,
+	ticket *repo.TicketRepo, order *repo.OrderRepo, grid *repo.GridConfigRepo,
 ) *ScrmService {
 	return &ScrmService{db: db, actRepo: act, leadRepo: lead, taskRepo: task,
-		recRepo: rec, excRepo: exc, schedRepo: sched, perfRepo: perf, todoRepo: todo, handRepo: hand}
+		recRepo: rec, excRepo: exc, schedRepo: sched, perfRepo: perf, todoRepo: todo, handRepo: hand,
+		logRepo: fl, notifyRepo: notify,
+		oppRepo: opp, assignRepo: assign, task2Repo: task2, appealRepo: appeal,
+		approvalRepo: approval, dealRepo: deal, ticketRepo: ticket, orderRepo: order, gridRepo: grid}
 }
 
 // ---------------- 首页：当前用户 ----------------
@@ -49,18 +67,21 @@ func NewScrmService(db *gorm.DB,
 type MeInfo struct {
 	Name       string `json:"name"`
 	Title      string `json:"title"`
+	Phone      string `json:"phone"`
 	City       string `json:"city"`
 	Store      string `json:"store"`
 	Unread     int    `json:"unread"`
 	Roles      []string `json:"roles"`
 }
 
-func (s *ScrmService) Me() MeInfo {
+func (s *ScrmService) Me(ctx context.Context) (MeInfo, error) {
+	unread, _ := s.notifyRepo.UnreadCount(ctx, CurrentTenant, CurrentUserID)
 	return MeInfo{
 		Name: CurrentUserName, Title: "课程顾问",
-		City: "武汉", Store: "江汉区北诉市场校区", Unread: 12,
+		Phone: "13807110668",
+		City: "武汉", Store: "江汉区北诉市场校区", Unread: int(unread),
 		Roles: []string{"employee", "supervisor"},
-	}
+	}, nil
 }
 
 func (s *ScrmService) Dicts(kind string) interface{} {

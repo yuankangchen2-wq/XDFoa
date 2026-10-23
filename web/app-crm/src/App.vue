@@ -63,18 +63,10 @@
         </div>
         <div class="topbar-right">
           <span class="top-link"><el-icon><QuestionFilled /></el-icon>帮助文档</span>
-          <span class="top-link"><el-icon><Phone /></el-icon>外呼</span>
+          <span class="top-link" title="云座席双呼" @click="openCallBar()"><el-icon><Phone /></el-icon>云座席</span>
           <span class="top-link"><el-icon><ChatDotRound /></el-icon>企业微信</span>
-          <el-input
-            v-model="globalKw"
-            class="global-search"
-            placeholder="全局搜索：学员/手机号/活动"
-            :prefix-icon="Search"
-            @keyup.enter="doGlobalSearch"
-          />
-          <el-badge :value="me.unread" :max="99" class="msg-badge">
-            <el-icon class="top-link"><Bell /></el-icon>
-          </el-badge>
+          <GlobalSearch />
+          <NotificationCenter />
           <span class="top-link city">
             <el-icon><LocationInformation /></el-icon>
             {{ me.city }}·{{ me.store }}
@@ -118,6 +110,9 @@
         <router-view />
       </main>
     </div>
+
+    <!-- 云座席双呼工作条（全局唤起） -->
+    <CallBar />
   </div>
 </template>
 
@@ -126,20 +121,22 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown, Close, Fold, Expand, QuestionFilled, Phone, ChatDotRound,
-  Search, Bell, LocationInformation,
+  LocationInformation,
   HomeFilled, Promotion, List, TrendCharts, Shop, User, Grid,
   DataAnalysis, Microphone, FolderOpened, Tickets, RefreshLeft, Setting
 } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { menus, resolveMenu, type TopMenu, type SubMenu } from './config/menus'
 import { tabStore, openTab, closeTab } from './store/tabs'
 import { scrmApi, type MeInfo } from './api/scrm'
+import { openCallBar } from './store/call'
+import GlobalSearch from './components/GlobalSearch.vue'
+import CallBar from './components/CallBar.vue'
+import NotificationCenter from './components/NotificationCenter.vue'
 
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
 const opened = reactive<Record<string, boolean>>({})
-const globalKw = ref('')
 const me = ref<MeInfo>({ name: '陈元素', title: '', city: '武汉', store: '江汉校区', unread: 0, roles: [] })
 
 const iconMap: Record<string, any> = {
@@ -186,12 +183,6 @@ function goTab(t: { fullPath: string }) {
 function closeWorkTab(t: { fullPath: string }) {
   const redirect = closeTab(t.fullPath)
   if (redirect) router.push(redirect)
-}
-
-function doGlobalSearch() {
-  if (!globalKw.value.trim()) return
-  router.push({ path: '/all-leads', query: { keyword: globalKw.value.trim() } })
-  ElMessage.success('已按关键词在全部线索中搜索')
 }
 
 function syncRouteTab() {

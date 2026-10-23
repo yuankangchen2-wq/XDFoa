@@ -11,6 +11,17 @@ const routes = [
   { path: '/data-record', component: () => import('../views/DataRecord.vue'), meta: { title: '数据记录' } },
   { path: '/coming-soon', component: () => import('../views/ComingSoon.vue'), meta: { title: '功能建设中' } },
 
+  // 二期：线索管理工作台
+  { path: '/lead-workbench', component: () => import('../views/LeadWorkbench.vue'), meta: { title: '线索工作台' } },
+  // 三期：商机管理
+  { path: '/opp-workbench', component: () => import('../views/OppWorkbench.vue'), meta: { title: '商机工作台' } },
+  { path: '/opp-inventory', component: () => import('../views/OppInventory.vue'), meta: { title: '商机盘点' } },
+  { path: '/appeals', component: () => import('../views/AppealCenter.vue'), meta: { title: '业绩申诉' } },
+  { path: '/approvals', component: () => import('../views/ApprovalCenter.vue'), meta: { title: '审核中心' } },
+  { path: '/opp-standby', component: () => import('../views/OppStandby.vue'), meta: { title: '商机备单' } },
+  { path: '/deal-logs', component: () => import('../views/DealLogs.vue'), meta: { title: '成单日志' } },
+  { path: '/ticket-orders', component: () => import('../views/TicketOrder.vue'), meta: { title: '退调转/订单' } },
+
   // 既有 CRM 页面（保留）
   { path: '/customers', component: () => import('../views/CustomerList.vue'), meta: { title: '客户列表' } },
   { path: '/customers/:id', component: () => import('../views/CustomerDetail.vue'), meta: { title: '客户详情' } },

@@ -34,6 +34,17 @@ func main() {
 		&model.Schedule{},
 		&model.ConsultantPerf{},
 		&model.TodoSeed{},
+		&model.FollowLog{},
+		&model.Notification{},
+		&model.Opportunity{},
+		&model.OppAssignRecord{},
+		&model.EmployeeTask{},
+		&model.Appeal{},
+		&model.DealApproval{},
+		&model.DealLog{},
+		&model.BizTicket{},
+		&model.MallOrder{},
+		&model.GridConfig{},
 	); err != nil {
 		log.Fatalf("migrate: %v", err)
 	}
@@ -47,6 +58,19 @@ func main() {
 		log.Printf("migrate lead status: %v", err)
 	}
 
+	// 顶部栏：通知/通话记录种子（各自幂等，老库也会补）
+	if err := service.SeedNotifications(db); err != nil {
+		log.Printf("seed notifications: %v", err)
+	}
+	if err := service.SeedCallLogs(db); err != nil {
+		log.Printf("seed call logs: %v", err)
+	}
+
+	// 二三期：商机 / 分配流水 / 员工任务 / 申诉 / 审批 / 成单 / 工单 / 订单（各自幂等）
+	if err := service.SeedP2P3(db); err != nil {
+		log.Printf("seed p2p3: %v", err)
+	}
+
 	svc := service.NewScrmService(
 		db,
 		repo.NewActivityRepo(db),
@@ -58,6 +82,17 @@ func main() {
 		repo.NewPerfRepo(db),
 		repo.NewTodoSeedRepo(db),
 		repo.NewHandoverRepo(db),
+		repo.NewFollowLogRepo(db),
+		repo.NewNotificationRepo(db),
+		repo.NewOppRepo(db),
+		repo.NewAssignRecordRepo(db),
+		repo.NewEmployeeTaskRepo(db),
+		repo.NewAppealRepo(db),
+		repo.NewDealApprovalRepo(db),
+		repo.NewDealRepo(db),
+		repo.NewTicketRepo(db),
+		repo.NewOrderRepo(db),
+		repo.NewGridConfigRepo(db),
 	)
 
 	r := gin.Default()

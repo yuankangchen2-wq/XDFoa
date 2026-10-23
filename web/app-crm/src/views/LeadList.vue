@@ -213,24 +213,54 @@
 
     <!-- 详情抽屉 -->
     <el-drawer v-model="detailVisible" title="线索详情" size="460px">
-      <el-descriptions v-if="detail" :column="1" border>
-        <el-descriptions-item label="姓名">{{ detail.name }}</el-descriptions-item>
-        <el-descriptions-item label="手机号">{{ detail.phone }}（列表页默认脱敏）</el-descriptions-item>
-        <el-descriptions-item label="学员号">{{ detail.student_no }}</el-descriptions-item>
-        <el-descriptions-item label="线索编码">{{ detail.code }}</el-descriptions-item>
-        <el-descriptions-item label="线索状态">{{ detail.status }}</el-descriptions-item>
-        <el-descriptions-item label="进入类型">{{ detail.enter_type }}</el-descriptions-item>
-        <el-descriptions-item label="学员标签">{{ detail.student_tag }}</el-descriptions-item>
-        <el-descriptions-item label="学校 / 年级">{{ detail.school }} / {{ detail.grade }}</el-descriptions-item>
-        <el-descriptions-item label="意向">{{ detail.intention_grade }} · {{ detail.intention_level }} · {{ detail.intention_campus }} · {{ detail.intention_project }}</el-descriptions-item>
-        <el-descriptions-item label="渠道">{{ [detail.channel_l1, detail.channel_l2, detail.channel_l3].filter(Boolean).join(' / ') }}</el-descriptions-item>
-        <el-descriptions-item label="所属活动">{{ detail.activity_name }}</el-descriptions-item>
-        <el-descriptions-item label="归属人">{{ detail.owner_name || '未分配' }}</el-descriptions-item>
-        <el-descriptions-item label="跟进次数">{{ detail.follow_count }}</el-descriptions-item>
-        <el-descriptions-item label="最近跟进">{{ fmtTime(detail.last_follow_at) }} {{ detail.last_follow_content }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ fmtTime(detail.created_at) }}</el-descriptions-item>
-        <el-descriptions-item label="备注">{{ detail.remark || '—' }}</el-descriptions-item>
-      </el-descriptions>
+      <template v-if="detail">
+        <div class="detail-ops">
+          <el-button type="success" size="small" @click="openCall(detail)">
+            <el-icon><Phone /></el-icon>&nbsp;云座席双呼
+          </el-button>
+          <el-tag size="small" :type="detail.call_status === '已接通' ? 'success' : detail.call_status === '未接通' ? 'info' : 'warning'" effect="plain">
+            接线状态：{{ detail.call_status || '未拨打' }}
+          </el-tag>
+        </div>
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="姓名">{{ detail.name }}</el-descriptions-item>
+          <el-descriptions-item label="手机号">{{ detail.phone }}（列表页默认脱敏）</el-descriptions-item>
+          <el-descriptions-item label="学员号">{{ detail.student_no }}</el-descriptions-item>
+          <el-descriptions-item label="线索编码">{{ detail.code }}</el-descriptions-item>
+          <el-descriptions-item label="线索状态">{{ detail.status }}</el-descriptions-item>
+          <el-descriptions-item label="进入类型">{{ detail.enter_type }}</el-descriptions-item>
+          <el-descriptions-item label="学员标签">{{ detail.student_tag }}</el-descriptions-item>
+          <el-descriptions-item label="学校 / 年级">{{ detail.school }} / {{ detail.grade }}</el-descriptions-item>
+          <el-descriptions-item label="意向">{{ detail.intention_grade }} · {{ detail.intention_level }} · {{ detail.intention_campus }} · {{ detail.intention_project }}</el-descriptions-item>
+          <el-descriptions-item label="渠道">{{ [detail.channel_l1, detail.channel_l2, detail.channel_l3].filter(Boolean).join(' / ') }}</el-descriptions-item>
+          <el-descriptions-item label="所属活动">{{ detail.activity_name }}</el-descriptions-item>
+          <el-descriptions-item label="归属人">{{ detail.owner_name || '未分配' }}</el-descriptions-item>
+          <el-descriptions-item label="跟进次数">{{ detail.follow_count }}</el-descriptions-item>
+          <el-descriptions-item label="外呼记录">自外呼 {{ detail.self_call_count || 0 }} 次 / 总计 {{ detail.total_call_count || 0 }} 次；最近：{{ fmtTime(detail.last_call_at || '') || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="最近跟进">{{ fmtTime(detail.last_follow_at) }} {{ detail.last_follow_content }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ fmtTime(detail.created_at) }}</el-descriptions-item>
+          <el-descriptions-item label="备注">{{ detail.remark || '—' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <div class="logs-title">跟进日志（含外呼/通话记录）</div>
+        <div v-if="!followLogs.length" class="logs-empty">暂无跟进记录</div>
+        <el-timeline v-else class="logs-tl">
+          <el-timeline-item
+            v-for="lg in followLogs"
+            :key="lg.id"
+            :type="lg.result === '已接通' ? 'success' : lg.result === '未接通' ? 'info' : 'primary'"
+            :timestamp="fmtTime(lg.created_at)"
+          >
+            <div class="lg-line">
+              <el-tag size="small" effect="plain">{{ lg.type }}</el-tag>
+              <el-tag size="small" :type="lg.result === '已接通' ? 'success' : 'info'" effect="plain">{{ lg.result || '事件' }}</el-tag>
+              <span v-if="lg.duration_sec" class="lg-dur">{{ mmss(lg.duration_sec) }}</span>
+            </div>
+            <div class="lg-content">{{ lg.content }}</div>
+            <div class="lg-operator">{{ lg.operator }}</div>
+          </el-timeline-item>
+        </el-timeline>
+      </template>
     </el-drawer>
 
     <!-- 批量调整 -->
@@ -313,8 +343,9 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Refresh, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
-import { scrmApi, maskPhone, fmtTime, type Lead } from '../api/scrm'
+import { Download, Refresh, ArrowUp, ArrowDown, Phone } from '@element-plus/icons-vue'
+import { scrmApi, maskPhone, fmtTime, type Lead, type FollowLog } from '../api/scrm'
+import { openCallBar, callState } from '../store/call'
 import ReceiverDialog from '../components/ReceiverDialog.vue'
 
 const route = useRoute()
@@ -397,7 +428,40 @@ function exportXlsx() {
 // 详情
 const detailVisible = ref(false)
 const detail = ref<Lead | null>(null)
-function openDetail(row: Lead) { detail.value = row; detailVisible.value = true }
+const followLogs = ref<FollowLog[]>([])
+
+async function openDetail(row: Lead) {
+  detail.value = row
+  detailVisible.value = true
+  followLogs.value = []
+  try {
+    // 拉取最新详情（含通话维度）与跟进日志
+    const [fresh, logs] = await Promise.all([
+      scrmApi.leadDetail(row.id),
+      scrmApi.followLogs(row.id)
+    ])
+    detail.value = fresh
+    followLogs.value = logs
+  } catch { /* 用列表行数据兜底 */ }
+}
+
+function openCall(row: Lead) {
+  openCallBar(detail.value && detail.value.id === row.id ? detail.value : row)
+}
+
+function mmss(sec: number) {
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+// 工作条关闭后刷新当前抽屉的通话记录
+watch(() => callState.visible, v => {
+  if (!v && detailVisible.value && detail.value) {
+    openDetail(detail.value)
+    load()
+  }
+})
 
 // 批量调整
 const adjustVisible = ref(false)
@@ -466,6 +530,16 @@ function onL2(v: string) {
   f.channel_l3 = ''
 }
 
+// 全局搜索深链：?lead_id=123 直接打开线索详情
+async function maybeOpenDeepLink() {
+  const id = Number(route.query.lead_id)
+  if (!id) return
+  try {
+    const lead = await scrmApi.leadDetail(id)
+    openDetail(lead)
+  } catch { /* 线索不存在时忽略 */ }
+}
+
 onMounted(async () => {
   // 路由参数预填（待办卡片下钻 / 活动下钻）
   const q = route.query
@@ -484,14 +558,16 @@ onMounted(async () => {
   await Promise.all(kinds.map(async k => { opts.value[k] = await scrmApi.dict(k) }))
   await syncChannels()
   load()
+  maybeOpenDeepLink()
 })
 
 watch(() => f.channel_l1, onL1)
 watch(() => f.channel_l2, onL2)
 watch(() => route.fullPath, () => {
-  // 从待交接 / 全部线索菜单切换时重新按视图加载
+  // 从待交接 / 全部线索菜单切换或搜索深链跳转时重新按视图加载
   page.value = 1
   load()
+  maybeOpenDeepLink()
 })
 </script>
 
@@ -504,4 +580,11 @@ watch(() => route.fullPath, () => {
 .pager { margin-top: 10px; justify-content: flex-end; }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
 .stat-num { font-weight: 700; color: #00a86b; }
+.detail-ops { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.logs-title { font-weight: 700; font-size: 14px; margin: 18px 0 10px; color: #1f2d3d; }
+.logs-empty { color: #909399; font-size: 13px; text-align: center; padding: 20px 0; }
+.lg-line { display: flex; align-items: center; gap: 6px; }
+.lg-dur { font-size: 12px; color: #00a86b; font-variant-numeric: tabular-nums; }
+.lg-content { font-size: 13px; color: #475669; margin-top: 4px; }
+.lg-operator { font-size: 11px; color: #c0c4cc; margin-top: 2px; }
 </style>

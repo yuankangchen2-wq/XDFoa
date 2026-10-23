@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/oa-portal/crm-scrm-service/internal/model"
@@ -345,6 +346,45 @@ func (r *LeadRepo) Get(ctx context.Context, id int64) (*model.Lead, error) {
 	var l model.Lead
 	err := r.db.WithContext(ctx).First(&l, id).Error
 	return &l, err
+}
+
+// Search 全字段检索：姓名 / 明文电话 / 密文电话（130****3868）/ 线索编码 / 学员号
+func (r *LeadRepo) Search(ctx context.Context, tenantID, keyword string, limit int) ([]model.Lead, error) {
+	kw := strings.TrimSpace(keyword)
+	if kw == "" {
+		return nil, nil
+	}
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	q := r.db.WithContext(ctx).Model(&model.Lead{}).Where("tenant_id = ?", tenantID)
+	if strings.Contains(kw, "*") || strings.Contains(kw, "＊") {
+		// 密文电话：把星号转成 SQL 通配符做模糊匹配
+		pat := strings.NewReplacer("＊", "%", "*", "%").Replace(kw)
+		q = q.Where("phone LIKE ?", pat)
+	} else {
+		q = q.Where("name LIKE ? OR phone LIKE ? OR code LIKE ? OR student_no LIKE ?",
+			like(kw), like(kw), like(kw), like(kw))
+	}
+	var list []model.Lead
+	err := q.Order("id DESC").Limit(limit).Find(&list).Error
+	return list, err
+}
+
+// ApplyCallResult 通话结束后回写线索通话维度字段
+func (r *LeadRepo) ApplyCallResult(ctx context.Context, tenantID string, leadID int64, connected bool, at time.Time) error {
+	status := "未接通"
+	if connected {
+		status = "已接通"
+	}
+	return r.db.WithContext(ctx).Model(&model.Lead{}).
+		Where("tenant_id = ? AND id = ?", tenantID, leadID).
+		Updates(map[string]interface{}{
+			"call_status":     status,
+			"last_call_at":    at,
+			"self_call_count": gorm.Expr("self_call_count + 1"),
+			"total_call_count": gorm.Expr("total_call_count + 1"),
+		}).Error
 }
 func (r *LeadRepo) List(ctx context.Context, tenantID string, f LeadFilter, p Page) (*PageResult[model.Lead], error) {
 	q := r.db.WithContext(ctx).Model(&model.Lead{}).Where("tenant_id = ?", tenantID)
@@ -796,4 +836,104 @@ func NewHandoverRepo(db *gorm.DB) *HandoverRepo { return &HandoverRepo{db: db} }
 
 func (r *HandoverRepo) Create(ctx context.Context, rec *model.HandoverRecord) error {
 	return r.db.WithContext(ctx).Create(rec).Error
+}
+
+// ---------------- 跟进日志（外呼/通话） ----------------
+
+type FollowLogRepo struct{ db *gorm.DB }
+
+func NewFollowLogRepo(db *gorm.DB) *FollowLogRepo { return &FollowLogRepo{db: db} }
+
+func (r *FollowLogRepo) Create(ctx context.Context, l *model.FollowLog) error {
+	return r.db.WithContext(ctx).Create(l).Error
+}
+func (r *FollowLogRepo) Update(ctx context.Context, l *model.FollowLog) error {
+	return r.db.WithContext(ctx).Save(l).Error
+}
+func (r *FollowLogRepo) Get(ctx context.Context, id int64) (*model.FollowLog, error) {
+	var l model.FollowLog
+	err := r.db.WithContext(ctx).First(&l, id).Error
+	return &l, err
+}
+func (r *FollowLogRepo) ListByLead(ctx context.Context, tenantID string, leadID int64, limit int) ([]model.FollowLog, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	var list []model.FollowLog
+	err := r.db.WithContext(ctx).
+		Where("tenant_id = ? AND lead_id = ?", tenantID, leadID).
+		Order("id DESC").Limit(limit).Find(&list).Error
+	return list, err
+}
+func (r *FollowLogRepo) ListRecent(ctx context.Context, tenantID, operatorID string, limit int) ([]model.FollowLog, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 20
+	}
+	var list []model.FollowLog
+	q := r.db.WithContext(ctx).Where("tenant_id = ?", tenantID)
+	if operatorID != "" {
+		q = q.Where("operator_id = ?", operatorID)
+	}
+	err := q.Order("id DESC").Limit(limit).Find(&list).Error
+	return list, err
+}
+func (r *FollowLogRepo) CountAny(ctx context.Context, tenantID string) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.FollowLog{}).Where("tenant_id = ?", tenantID).Count(&n).Error
+	return n, err
+}
+func (r *FollowLogRepo) CreateBatch(ctx context.Context, rows []model.FollowLog) error {
+	return r.db.WithContext(ctx).CreateInBatches(rows, 200).Error
+}
+
+// ---------------- 站内通知 ----------------
+
+type NotificationFilter struct {
+	UserID string
+	Unread string // "" 全部 / "1" 未读 / "0" 已读
+}
+
+type NotificationRepo struct{ db *gorm.DB }
+
+func NewNotificationRepo(db *gorm.DB) *NotificationRepo { return &NotificationRepo{db: db} }
+
+func (r *NotificationRepo) CreateBatch(ctx context.Context, rows []model.Notification) error {
+	return r.db.WithContext(ctx).CreateInBatches(rows, 200).Error
+}
+func (r *NotificationRepo) List(ctx context.Context, tenantID string, f NotificationFilter, p Page) (*PageResult[model.Notification], error) {
+	q := r.db.WithContext(ctx).Model(&model.Notification{}).
+		Where("tenant_id = ? AND user_id = ?", tenantID, f.UserID)
+	if f.Unread == "1" {
+		q = q.Where("is_read = 0")
+	} else if f.Unread == "0" {
+		q = q.Where("is_read = 1")
+	}
+	var res PageResult[model.Notification]
+	if err := q.Count(&res.Total).Error; err != nil {
+		return nil, err
+	}
+	if err := q.Order("id DESC").Scopes(Paginate(p)).Find(&res.Items).Error; err != nil {
+		return nil, err
+	}
+	res.Page, res.PageSize = p.Page, p.PageSize
+	return &res, nil
+}
+func (r *NotificationRepo) UnreadCount(ctx context.Context, tenantID, userID string) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.Notification{}).
+		Where("tenant_id = ? AND user_id = ? AND is_read = 0", tenantID, userID).Count(&n).Error
+	return n, err
+}
+func (r *NotificationRepo) MarkRead(ctx context.Context, tenantID, userID string, ids []int64, all bool) error {
+	q := r.db.WithContext(ctx).Model(&model.Notification{}).
+		Where("tenant_id = ? AND user_id = ?", tenantID, userID)
+	if !all {
+		q = q.Where("id IN ?", ids)
+	}
+	return q.Update("is_read", 1).Error
+}
+func (r *NotificationRepo) CountAny(ctx context.Context, tenantID string) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.Notification{}).Where("tenant_id = ?", tenantID).Count(&n).Error
+	return n, err
 }

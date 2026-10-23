@@ -84,10 +84,24 @@ type Lead struct {
 	LastFollowAt     *time.Time `json:"last_follow_at"`
 	LastFollowContent string    `gorm:"size:1024" json:"last_follow_content"`
 	FollowCount      int32      `json:"follow_count"`
+	CallStatus       string     `gorm:"size:32" json:"call_status"`         // 接线状态：未拨打/已接通/未接通
+	LastCallAt       *time.Time `json:"last_call_at"`                        // 最近外呼时间
+	SelfCallCount    int32      `json:"self_call_count"`                     // 自外呼次数
+	TotalCallCount   int32      `json:"total_call_count"`                    // 总外呼次数
+	AiCallCount      int32      `json:"ai_call_count"`                       // AI外呼次数
+	AiCallAt         *time.Time `json:"ai_call_at"`                          // AI外呼时间
+	TotalFollowCount int32      `json:"total_follow_count"`                  // 总跟进次数（全员）
+	DeductWechat     int32      `json:"deduct_wechat"`                       // 是否扣微
 	NextFollowAt     *time.Time `gorm:"index" json:"next_follow_at"`
 	ArchiveTime      *time.Time `json:"archive_time"`
 	ArchiveRule      string     `gorm:"size:128" json:"archive_rule"`
 	ArchiveWay       string     `gorm:"size:64" json:"archive_way"`
+	ArchiveReason    string     `gorm:"size:256" json:"archive_reason"`
+	ArchiveOperator  string     `gorm:"size:64" json:"archive_operator"`
+	RecycleReason    string     `gorm:"size:256" json:"recycle_reason"`
+	RecycleAt        *time.Time `json:"recycle_at"`
+	BusinessChannelL2 string    `gorm:"size:64" json:"business_channel_l2"`
+	BusinessChannelL3 string    `gorm:"size:64" json:"business_channel_l3"`
 	IsDuplicate      int32      `gorm:"default:0;index" json:"is_duplicate"`
 	Creator          string     `gorm:"size:64" json:"creator"`
 	CreatorDept      string     `gorm:"size:128" json:"creator_dept"`
@@ -253,3 +267,38 @@ type TodoSeed struct {
 }
 
 func (TodoSeed) TableName() string { return "scrm_todo_seed" }
+
+// FollowLog 线索跟进日志（点击外呼、通话记录均落此表）
+type FollowLog struct {
+	ID          int64     `gorm:"primaryKey" json:"id"`
+	TenantID    string    `gorm:"index;size:64" json:"tenant_id"`
+	LeadID      int64     `gorm:"index" json:"lead_id"`
+	LeadName    string    `gorm:"size:64" json:"lead_name"`
+	Type        string    `gorm:"size:32;index" json:"type"` // 双呼 / 电话外呼 / 跟进备注
+	Content     string    `gorm:"size:1024" json:"content"`
+	Result      string    `gorm:"size:32" json:"result"` // 已接通 / 未接通
+	DurationSec int32     `json:"duration_sec"`
+	CustomerPhone string  `gorm:"size:32" json:"customer_phone"`
+	Operator    string    `gorm:"size:64" json:"operator"`
+	OperatorID  string    `gorm:"size:64" json:"operator_id"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+func (FollowLog) TableName() string { return "scrm_follow_log" }
+
+// Notification 站内通知
+type Notification struct {
+	ID        int64     `gorm:"primaryKey" json:"id"`
+	TenantID  string    `gorm:"index;size:64" json:"tenant_id"`
+	UserID    string    `gorm:"index;size:64" json:"user_id"`
+	Type      string    `gorm:"size:32" json:"type"` // todo / handover / task / system
+	Title     string    `gorm:"size:128" json:"title"`
+	Content   string    `gorm:"size:512" json:"content"`
+	BizType   string    `gorm:"size:32" json:"biz_type"` // lead / home / activity ...
+	BizID     string    `gorm:"size:64" json:"biz_id"`
+	Route     string    `gorm:"size:256" json:"route"`   // 点击跳转路由
+	IsRead    int32     `gorm:"default:0;index" json:"is_read"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (Notification) TableName() string { return "scrm_notification" }
